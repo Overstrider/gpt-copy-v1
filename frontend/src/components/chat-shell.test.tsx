@@ -1,11 +1,12 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, expect, test, vi } from "vitest";
-import { ChatShell } from "./chat-shell";
+import { ChatShell, HealthIndicator } from "./chat-shell";
 
 const conversations: unknown[] = [];
 
 beforeEach(() => {
+  cleanup();
   conversations.length = 0;
   vi.stubGlobal(
     "fetch",
@@ -86,4 +87,15 @@ test("shows health status and sends a message", async () => {
   await userEvent.click(screen.getByLabelText("Send message"));
 
   await waitFor(() => expect(screen.getByText("mock answer")).toBeInTheDocument());
+});
+
+test("renders health indicator states", () => {
+  const { rerender } = render(<HealthIndicator loading error={false} />);
+  expect(screen.getByText("Checking")).toBeInTheDocument();
+
+  rerender(<HealthIndicator loading={false} error model="openrouter/free" />);
+  expect(screen.getByText("Offline")).toBeInTheDocument();
+
+  rerender(<HealthIndicator loading={false} error={false} model="openrouter/free" />);
+  expect(screen.getByText("openrouter/free")).toBeInTheDocument();
 });
