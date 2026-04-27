@@ -5,7 +5,7 @@ import { Bot, CircleAlert, CircleCheck, Loader2, Menu, Plus, Send, UserRound } f
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useMemo, useState } from "react";
-import { getHealth, listConversations, listMessages, sendMessage } from "@/lib/api";
+import { getHealth, listConversations, listMessages, sendMessageStream } from "@/lib/api";
 import { Providers } from "@/lib/query-client";
 import type { Conversation, Message } from "@/lib/schemas";
 
@@ -22,6 +22,7 @@ function ChatExperience() {
   const [activeConversationId, setActiveConversationId] = useState<string | undefined>();
   const [draft, setDraft] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [streamingText, setStreamingText] = useState("");
 
   const conversations = useQuery({
     queryKey: ["conversations"],
@@ -41,9 +42,16 @@ function ChatExperience() {
   const activeConversation = conversations.data?.find((item) => item.id === activeConversationId);
 
   const mutation = useMutation({
-    mutationFn: () => sendMessage(draft.trim(), activeConversationId),
+    mutationFn: async () => {
+      setStreamingText("");
+      const message = draft.trim();
+      return sendMessageStream(message, activeConversationId, (token) => {
+        setStreamingText((current) => current + token);
+      });
+    },
     onSuccess: async (response) => {
       setDraft("");
+      setStreamingText("");
       setActiveConversationId(response.conversation.id);
       await queryClient.invalidateQueries({ queryKey: ["conversations"] });
       await queryClient.invalidateQueries({ queryKey: ["messages", response.conversation.id] });
@@ -56,8 +64,21 @@ function ChatExperience() {
     if (mutation.data && mutation.data.conversation.id === activeConversationId) {
       return [...currentMessages, mutation.data.user_message, mutation.data.assistant_message];
     }
+    if (mutation.isPending && streamingText) {
+      const conversationId = activeConversationId ?? "streaming";
+      return [
+        ...currentMessages,
+        {
+          id: "streaming-assistant",
+          conversation_id: conversationId,
+          role: "assistant" as const,
+          content: streamingText,
+          created_at: new Date().toISOString(),
+        },
+      ];
+    }
     return currentMessages;
-  }, [activeConversationId, messages.data, mutation.data]);
+  }, [activeConversationId, messages.data, mutation.data, mutation.isPending, streamingText]);
 
   return (
     <main className="flex min-h-screen bg-[#171717] text-[#ececec]">
@@ -126,7 +147,7 @@ function ChatExperience() {
             ) : (
               displayMessages.map((message: Message) => <MessageBubble key={message.id} message={message} />)
             )}
-            {mutation.isPending ? <p className="text-sm text-[#a8a8a8]">Thinking...</p> : null}
+            {mutation.isPending && !streamingText ? <p className="text-sm text-[#a8a8a8]">Thinking...</p> : null}
             {mutation.isError ? <p className="text-sm text-red-400">Could not send message.</p> : null}
           </div>
 

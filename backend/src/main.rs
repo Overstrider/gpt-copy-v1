@@ -281,7 +281,7 @@ async fn chat_stream(
         .split_whitespace()
         .map(|word| format!("{word} "))
         .collect();
-    let done_payload = serde_json::to_string(&response.assistant_message)?;
+    let done_payload = serde_json::to_string(&response)?;
     let stream = stream::iter(words.into_iter().map(|token| {
         let data = serde_json::json!({ "type": "token", "token": token }).to_string();
         Ok(Event::default().event("token").data(data))
@@ -544,5 +544,27 @@ mod tests {
             json["assistant_message"]["content"],
             "mock answer to: hello"
         );
+    }
+
+    #[tokio::test]
+    async fn streams_token_and_done_events() {
+        let app = test_app().await;
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/api/chat/stream")
+                    .header("content-type", "application/json")
+                    .body(Body::from(r#"{"message":"stream please"}"#))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::OK);
+        let bytes = response.into_body().collect().await.unwrap().to_bytes();
+        let body = String::from_utf8(bytes.to_vec()).unwrap();
+        assert!(body.contains("event: token"));
+        assert!(body.contains("event: done"));
+        assert!(body.contains("mock answer to: stream please"));
     }
 }
