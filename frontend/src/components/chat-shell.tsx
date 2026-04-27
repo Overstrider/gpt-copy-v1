@@ -186,7 +186,7 @@ function ChatExperience() {
   );
 }
 
-function HealthIndicator({ loading, error, model }: { loading: boolean; error: boolean; model?: string }) {
+export function HealthIndicator({ loading, error, model }: { loading: boolean; error: boolean; model?: string }) {
   if (loading) {
     return (
       <span className="flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs text-[#a8a8a8]">
