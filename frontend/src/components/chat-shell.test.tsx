@@ -44,6 +44,35 @@ beforeEach(() => {
           },
         });
       }
+      if (url.endsWith("/api/chat/stream") && init?.method === "POST") {
+        const body = JSON.parse(String(init.body));
+        const response = {
+          conversation: {
+            id: "c1",
+            title: body.message,
+            created_at: "2026-04-27T00:00:00Z",
+            updated_at: "2026-04-27T00:00:00Z",
+          },
+          user_message: {
+            id: "m1",
+            conversation_id: "c1",
+            role: "user",
+            content: body.message,
+            created_at: "2026-04-27T00:00:00Z",
+          },
+          assistant_message: {
+            id: "m2",
+            conversation_id: "c1",
+            role: "assistant",
+            content: "mock answer",
+            created_at: "2026-04-27T00:00:01Z",
+          },
+        };
+        return new Response(
+          `event: token\ndata: {"token":"mock "}\n\nevent: token\ndata: {"token":"answer"}\n\nevent: done\ndata: ${JSON.stringify(response)}\n\n`,
+          { headers: { "content-type": "text/event-stream" } },
+        );
+      }
       return new Response("not found", { status: 404 });
     }),
   );
