@@ -1,0 +1,28 @@
+{
+  "status": "approved",
+  "rules_path": ".codedungeon/project-rules.md",
+  "compact_path": ".codedungeon/project-rules.compact.md",
+  "source_digest": "be3cd6e300d05430271e15ed65787b7dba68c8d64383e2d056e79cd2221df0bf",
+  "rules_digest": "bdb982e8cfdd482b485b472b55ddbcac2bf3a4180527acccbdc40ea33768a337",
+  "approved_at": "2026-04-27T02:10:41Z",
+  "approved_by": "codex",
+  "sources": [
+    ".codedungeon/README.md",
+    ".codex/agents/cd_api_tester.toml",
+    ".codex/agents/cd_architect_planner.toml",
+    ".codex/agents/cd_backend_planner.toml",
+    ".codex/agents/cd_dev_worker.toml",
+    ".codex/agents/cd_e2e_tester.toml",
+    ".codex/agents/cd_qa_planner.toml",
+    ".codex/agents/cd_review_classifier.toml",
+    ".codex/agents/cd_review_newhire.toml",
+    ".codex/agents/cd_review_saboteur.toml",
+    ".codex/agents/cd_review_security.toml",
+    ".codex/agents/cd_review_spec.toml",
+    ".codex/agents/cd_review_validator.toml",
+    ".codex/agents/cd_task_architect.toml",
+    ".codex/agents/cd_test_reviewer.toml",
+    ".codex/config.toml",
+    "AGENTS.md"
+  ]
+}
